@@ -1,0 +1,33 @@
+1. Moved (commented out in the files) functions that are more general from shop_backend and shop_frontend to utils, since they are not specific to neither of those files. Also added includes to utils to make it work
+    Functions moved are:
+    void destroy_list_and_itr(ioopm_list_t* list, ioopm_list_iterator_t *itr);
+    void destroy_lists_and_itrs(ioopm_list_t* list1, ioopm_list_t *list2, ioopm_list_iterator_t *itr1, ioopm_list_iterator_t *itr2);
+    void destroy_two_lists(ioopm_list_t* list1, ioopm_list_t* list2);
+
+2. Fixed Makefile bug frontend not compiling, changed make frontend to run frontend_compile.o instead of frontend.o
+
+3. Removed typedef struct shop shop_t from backend.c-file since it is already in backend-h file
+
+
+CHANGES IN ADD_TO_CART
+
+4. changed 	size_t size = ioopm_linked_list_size(merch_names) to 	size_t merch_in_store = ioopm_linked_list_size(merch_names) to make the code more readable.
+
+5. changed variable name m_ht to ht_merch to make it more readable
+
+6. added assert(ht_merch) to prevent invalid reads if ht_merch is NULL //note that this might not be necessary of the functions are called with ht_merch can take NULL as argument and not crash
+
+CHANGES IN REPLENISH
+
+7. moved lines up in function to prevent unneccesary code if the conditions are met
+
+if (size != 3 || !(isalpha(shelf[0]) && isdigit(shelf[1]) && isdigit(shelf[2])))
+	{
+		return Failure();
+	}
+
+8. changed merch->name to name_of_item variable in line 374
+
+9. moved option_t result = find_location(merch->locs, shelf) down a few lines to prevent unneccesary code running if the if-condition below its previous initilization was met.
+
+10. added assert(ht_merch) and assert(ht_shelf) to prevent invalid reads if ht_merch or ht_shelf is NULL //note that this might not be necessary of the functions are called with ht_merch and ht_shelf can take NULL as argument and not crash

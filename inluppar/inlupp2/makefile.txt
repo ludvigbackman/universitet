@@ -1,0 +1,72 @@
+
+CC = gcc
+
+GCOV = -g -fprofile-arcs -ftest-coverage
+
+FLAGS = -Wextra -pedantic -std=c17  
+
+INLUPP1_C = "../inlupp1/hash_table.c" "../inlupp1/linked_list.c" 
+
+%.o : %.c 
+	$(CC) $(FLAGS) $?
+
+####### shop_backend #######
+
+backend_compile: shop_backend.c shop_backend.h internal_data_structures.h
+	$(CC) $(FLAGS) -lm -c shop_backend.c
+
+backend_compile.o: backend_compile
+
+sb_gdb: shop_backend.c 
+	$(CC) $(FLAGS) -g shop_backend.c 
+	
+sb_test_compile.o: shop_backend_test.c shop_backend.c utils.c internal_data_structures.h
+	$(CC) $(FLAGS) -lm -g shop_backend_test.c shop_backend.c utils.c "../inlupp1/hash_table.c" "../inlupp1/linked_list.c" -lcunit -o sb_test_compile.o 
+
+sb_test: sb_test_compile.o
+	./sb_test_compile.o
+
+sb_test_gdb: sb_test_compile.o
+	$(CC) $(FLAGS) -g shop_backend_test.c shop_backend.c $(INLUPP1_C) utils.c -lcunit 
+	gdb ./sb_test.o
+
+sb_test_gprof: shop_backend_test.c 
+	$(CC) $(FLAGS) -pg shop_backend_test.c shop_backend.c $(INLUPP1_C) utils.c -lcunit -o sb_test_gprof
+
+sb_test_cov: shop_backend_test.c shop_backend.c utils.c 
+	$(CC) $(FLAGS) $(GCOV) -g shop_backend_test.c $(INLUPP1_C) utils.c shop_backend.c -lcunit -o sb_test_compile.o
+	./sb_test_compile.o
+	gcov -b shop_backend_test.c
+
+memtest_sb: sb_test_compile.o
+	valgrind --leak-check=full --track-origins=yes ./sb_test_compile.o
+
+###### shop_frontend #####
+
+frontend_compile.o: shop_frontend.c shop_frontend.h shop_backend.c utils.c internal_data_structures.h
+	$(CC) $(FLAGS) -lm shop_frontend.c shop_backend.c utils.c  $(INLUPP1_C) -o frontend_compile.o
+
+frontend.o: frontend_compile.o
+	./frontend_compile.o
+
+memtest_f: 
+	valgrind --leak-check=full ./a.out
+f_test_cov: shop_frontend.c shop_backend.c 
+	$(CC) $(FLAGS) $(GCOV) shop_frontend.c $(INLUPP1_C) shop_backend.c utils.c -o frontend
+	./frontend_compile.o < text.txt
+	gcov -b shop_frontend.c
+
+##### All #####
+
+all: backend frontend 
+
+coverage: sb_test_cov f_test_cov
+
+test: sb_test
+
+memtest: memtest_sb 
+
+clean:
+	rm -f *.gcov *.gcda *.gcno *.gprof *.o
+
+.PHONY: all test clean
